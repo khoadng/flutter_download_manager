@@ -23,15 +23,19 @@ class DownloadManager {
 
   DownloadManager._internal();
 
+  static void Function(Object error)? _onError;
+
   factory DownloadManager({
     int? maxConcurrentTasks,
     Dio? dio,
+    void Function(Object error)? onError,
   }) {
     if (maxConcurrentTasks != null) {
       _dm.maxConcurrentTasks = maxConcurrentTasks;
     }
 
     _dm.dio = dio ?? Dio();
+    _onError = onError;
 
     return _dm;
   }
@@ -111,6 +115,7 @@ class DownloadManager {
       var task = getDownload(url)!;
       if (task.status.value != DownloadStatus.canceled &&
           task.status.value != DownloadStatus.paused) {
+        _onError?.call(e);
         setStatus(task, DownloadStatus.failed);
         runningTasks--;
 
