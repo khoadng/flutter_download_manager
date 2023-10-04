@@ -6,6 +6,8 @@ import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_download_manager/flutter_download_manager.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 class DownloadManager {
   final Map<String, DownloadTask> _cache = <String, DownloadTask>{};
@@ -63,8 +65,11 @@ class DownloadManager {
       if (kDebugMode) {
         print(url);
       }
+      var tempDir = await getTemporaryDirectory();
+      final downloadFilename = getFileNameFromUrl(url);
+
       var file = File(savePath.toString());
-      partialFilePath = savePath + partialExtension;
+      partialFilePath = join(tempDir.path, downloadFilename + partialExtension);
       partialFile = File(partialFilePath);
 
       var fileExist = await file.exists();
