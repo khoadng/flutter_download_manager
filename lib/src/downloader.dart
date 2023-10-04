@@ -101,7 +101,7 @@ class DownloadManager {
           await ioSink.addStream(_f.openRead());
           await _f.delete();
           await ioSink.close();
-          await partialFile.rename(savePath);
+          await moveFile(partialFile, savePath);
 
           setStatus(task, DownloadStatus.completed);
         }
@@ -112,7 +112,7 @@ class DownloadManager {
             deleteOnError: false);
 
         if (response.statusCode == HttpStatus.ok) {
-          await partialFile.rename(savePath);
+          await moveFile(partialFile, savePath);
           setStatus(task, DownloadStatus.completed);
         }
       }
@@ -142,6 +142,18 @@ class DownloadManager {
 
     if (_queue.isNotEmpty) {
       _startExecution();
+    }
+  }
+
+  Future<File> moveFile(File sourceFile, String newPath) async {
+    try {
+      // prefer using rename as it is probably faster
+      return await sourceFile.rename(newPath);
+    } on FileSystemException catch (e) {
+      // if rename fails, copy the source file and then delete it
+      final newFile = await sourceFile.copy(newPath);
+      await sourceFile.delete();
+      return newFile;
     }
   }
 
